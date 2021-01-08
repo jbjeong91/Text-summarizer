@@ -1,4 +1,4 @@
-# Text-summerizer
+# Text-summarizer
 
 ## Notes
 - 트랜스포머와 Point Generative Network를 기반으로하는 문장 요약 모델
