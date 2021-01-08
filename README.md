@@ -6,7 +6,7 @@
   The code is for Text summery based on Transformer and Point Generative Network
 - 이 코드는 아래의 Transforemr 코드를 수정하여 제작되었음
   
-  The codes are modified based on the Transformer [repo](https://github.com/). Some parts from original repo have been deleted and modified.
+  The codes are modified based on the Transformer [repo](https://github.com/NLP-kr/tensorflow-ml-nlp). Some parts from original repo have been deleted and modified.
 
 ## Data
 - 아마존 음식 리뷰 데이터 활용
