@@ -7,6 +7,10 @@
 - 이 코드는 아래의 Transforemr 코드를 수정하여 제작되었음
   
   The codes are modified based on the Transformer [repo](https://github.com/NLP-kr/tensorflow-ml-nlp). Some parts from original repo have been deleted and modified.
+  
+## Requirements
+- Python3
+- Tensorflow==1.12
 
 ## Data
 - 아마존 음식 리뷰 데이터 활용
