@@ -52,7 +52,7 @@ def prepro_seq(seq):
 '''
 # 지저분한 리뷰 문장 전처리
 def preprocess_sentence(sentence):
-    sentence = sentence.lower() # 텍스트 소문자화
+    sentence = str(sentence).lower() # 텍스트 소문자화
     sentence = BeautifulSoup(sentence, "lxml").text # <br />, <a href = ...> 등의 html 태그 제거
     sentence = re.sub(r'\([^)]*\)', '', sentence) # 괄호로 닫힌 문자열  제거 Ex) my husband (and myself) for => my husband for
     sentence = re.sub('"','', sentence) # 쌍따옴표 " 제거
