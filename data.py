@@ -1,8 +1,7 @@
 #from konlpy.tag import Twitter
 from nltk.tokenize import WordPunctTokenizer
 import pandas as pd
-#import tensorflow as tf
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 import enum
 import os
 import re
@@ -13,6 +12,7 @@ from configs import DEFINES
 from tqdm import tqdm
 #--------------
 from bs4 import BeautifulSoup
+from transformers import BertTokenizer
 #----------------
 FILTERS = "([~.,\"':;)(]<>)'...'"
 PAD = "<PAD>"
@@ -31,25 +31,6 @@ CHANGE_FILTER = "[...]|[..]|[.]|,|<|>|br|/|-|!"
 
 contractions = {"ain't": "is not", "aren't": "are not","can't": "cannot", "'cause": "because", "could've": "could have", "couldn't": "could not", "didn't": "did not",  "doesn't": "does not", "don't": "do not", "hadn't": "had not", "hasn't": "has not", "haven't": "have not", "he'd": "he would","he'll": "he will", "he's": "he is", "how'd": "how did", "how'd'y": "how do you", "how'll": "how will", "how's": "how is", "I'd": "I would", "I'd've": "I would have", "I'll": "I will", "I'll've": "I will have","I'm": "I am", "I've": "I have", "i'd": "i would", "i'd've": "i would have", "i'll": "i will",  "i'll've": "i will have","i'm": "i am", "i've": "i have", "isn't": "is not", "it'd": "it would", "it'd've": "it would have", "it'll": "it will", "it'll've": "it will have","it's": "it is", "let's": "let us", "ma'am": "madam", "mayn't": "may not", "might've": "might have","mightn't": "might not","mightn't've": "might not have", "must've": "must have", "mustn't": "must not", "mustn't've": "must not have", "needn't": "need not", "needn't've": "need not have","o'clock": "of the clock", "oughtn't": "ought not", "oughtn't've": "ought not have", "shan't": "shall not", "sha'n't": "shall not", "shan't've": "shall not have", "she'd": "she would", "she'd've": "she would have", "she'll": "she will", "she'll've": "she will have", "she's": "she is", "should've": "should have", "shouldn't": "should not", "shouldn't've": "should not have", "so've": "so have","so's": "so as", "this's": "this is","that'd": "that would", "that'd've": "that would have", "that's": "that is", "there'd": "there would", "there'd've": "there would have", "there's": "there is", "here's": "here is","they'd": "they would", "they'd've": "they would have", "they'll": "they will", "they'll've": "they will have", "they're": "they are", "they've": "they have", "to've": "to have", "wasn't": "was not", "we'd": "we would", "we'd've": "we would have", "we'll": "we will", "we'll've": "we will have", "we're": "we are", "we've": "we have", "weren't": "were not", "what'll": "what will", "what'll've": "what will have", "what're": "what are", "what's": "what is", "what've": "what have", "when's": "when is", "when've": "when have", "where'd": "where did", "where's": "where is", "where've": "where have", "who'll": "who will", "who'll've": "who will have", "who's": "who is", "who've": "who have", "why's": "why is", "why've": "why have", "will've": "will have", "won't": "will not", "won't've": "will not have", "would've": "would have", "wouldn't": "would not", "wouldn't've": "would not have", "y'all": "you all", "y'all'd": "you all would","y'all'd've": "you all would have","y'all're": "you all are","y'all've": "you all have", "you'd": "you would", "you'd've": "you would have", "you'll": "you will", "you'll've": "you will have", "you're": "you are", "you've": "you have"}
 
-def load_data():
-    # 판다스를 통해서 데이터를 불러온다.
-    data_df = pd.read_csv(DEFINES.data_path, header=0)
-    # 질문과 답변 열을 가져와 question과 answer에 넣는다.
-    question, answer = list(data_df['Text']), list(data_df['Summary'])
-    # skleran에서 지원하는 함수를 통해서 학습 셋과
-    # 테스트 셋을 나눈다.
-    train_input, eval_input, train_label, eval_label = train_test_split(question, answer, test_size=0.33,
-                                                                        random_state=42)
-    # 그 값을 리턴한다.
-    return train_input, train_label, eval_input, eval_label
-
-'''
-def prepro_seq(seq):
-    seq = str(seq)
-    seq = re.sub(CHANGE_FILTER, " ", seq)
-    seq = re.sub(" +", " ", seq)
-    return seq
-'''
 # 지저분한 리뷰 문장 전처리
 def preprocess_sentence(sentence):
     sentence = str(sentence).lower() # 텍스트 소문자화
@@ -60,15 +41,57 @@ def preprocess_sentence(sentence):
     sentence = re.sub(r"'s\b","",sentence) # 소유격 제거. Ex) roland's -> roland
     sentence = re.sub("[^a-zA-Z]", " ", sentence) # 영어 외 문자(숫자, 특수문자 등) 공백으로 변환
     sentence = re.sub('[m]{2,}', 'mm', sentence) # m이 3개 이상이면 2개로 변경. Ex) ummmmmmm yeah -> umm yeah
-
+    
+    #추가
+    sentence = re.sub(CHANGE_FILTER, " ", sentence)
+    sentence = re.sub(" +", " ", sentence)
+    
     tokens = ' '.join(word for word in sentence.split() if len(word) > 1)
     return tokens
 
+def load_data():
+    # 판다스를 통해서 데이터를 불러온다.
+    data_df = pd.read_csv(DEFINES.data_path, header=0)
+    #------------------------------------------------------ 전처리
+    data = data_df[['text','headlines']]
+    data.drop_duplicates(subset=['text'], inplace=True)
+
+    # 질문과 답변 열을 가져와 question과 answer에 넣는다.
+    question, answer = data['text'], data['headlines']
+
+    clean_text = []
+    clean_summary = []
+    for q, a in zip(question, answer):
+        clean_text.append(preprocess_sentence(q))
+        clean_summary.append(preprocess_sentence(a))
+    data['text'] = clean_text
+    data['headlines'] = clean_summary
+    data.replace('',np.nan, inplace=True)
+    data.dropna(axis=0, inplace=True)
+    # -------------------------------------------------------------
+    question, answer = data['text'], data['headlines']
+    #-------------------------------------------------------------
+    # skleran에서 지원하는 함수를 통해서 학습 셋과
+    # 테스트 셋을 나눈다.
+    train_input, eval_input, train_label, eval_label = train_test_split(question, answer, test_size=0.33, random_state=42)
+
+    return train_input, train_label, eval_input, eval_label
+
+'''
+def prepro_seq(seq):
+    seq = str(seq)
+    seq = re.sub(CHANGE_FILTER, " ", seq)
+    seq = re.sub(" +", " ", seq)
+    return seq
+'''
+
+# BERT토크나이저로 토크나이징
 def prepro_like_morphlized(data):
     # 형태소 분석 모듈 객체를
     # 생성합니다.
-    #morph_analyzer = Twitter()
-    WP_analyzer = WordPunctTokenizer()
+    #WP_analyzer = WordPunctTokenizer()
+    bert_analyzer = BertTokenizer.from_pretrained('bert-base-uncased')
+
     # 형태소 토크나이즈 결과 문장을 받을
     #  리스트를 생성합니다.
     result_data = list()
@@ -78,8 +101,9 @@ def prepro_like_morphlized(data):
         # Twitter.morphs 함수를 통해 토크나이즈 된
         # 리스트 객체를 받고 다시 공백문자를 기준으로
         # 하여 문자열로 재구성 해줍니다.
-        seq = preprocess_sentence(seq)
-        morphlized_seq = " ".join(WP_analyzer.tokenize(seq))
+        seq = str(seq)
+        #seq = preprocess_sentence(seq)
+        morphlized_seq = " ".join(bert_analyzer.tokenize(seq))
         result_data.append(morphlized_seq)
 
     return result_data
@@ -104,7 +128,8 @@ def enc_processing(value, dictionary):
         # 정규화를 사용하여 필터에 들어 있는
         # 값들을 "" 으로 치환 한다.
         #sequence = re.sub(CHANGE_FILTER, "", sequence)
-        sequence = preprocess_sentence(sequence)
+        #sequence = preprocess_sentence(sequence)
+        sequence = str(sequence)
         # 하나의 문장을 인코딩 할때
         # 가지고 있기 위한 배열이다.
         sequence_index = []
@@ -155,9 +180,9 @@ def dec_output_processing(value, dictionary):
         # FILTERS = "([~.,!?\"':;)(])"
         # 정규화를 사용하여 필터에 들어 있는
         # 값들을 "" 으로 치환 한다.
-        sequence = preprocess_sentence(sequence)
+        #sequence = preprocess_sentence(sequence)
         #sequence = re.sub(CHANGE_FILTER, "", sequence)
-        #sequence = str(sequence)
+        sequence = str(sequence)
         # 하나의 문장을 디코딩 할때 가지고
         # 있기 위한 배열이다.
         sequence_index = []
@@ -199,8 +224,8 @@ def dec_target_processing(value, dictionary):
         # 정규화를 사용하여 필터에 들어 있는
         # 값들을 "" 으로 치환 한다.
         #sequence = re.sub(CHANGE_FILTER, "", sequence)
-        #sequence = str(sequence)
-        sequence = preprocess_sentence(sequence)
+        sequence = str(sequence)
+        #sequence = preprocess_sentence(sequence)
         # 문장에서 스페이스 단위별로 단어를 가져와서
         # 딕셔너리의 값인 인덱스를 넣어 준다.
         # 디코딩 출력의 마지막에 END를 넣어 준다.
@@ -341,11 +366,12 @@ def eval_input_fn(eval_input_enc, eval_output_dec, eval_target_dec, batch_size):
     return iterator.get_next()
 
 
+#띄어쓰기 기준으로 토크나이징
 def data_tokenizer(data):
-    # 토크나이징 해서 담을 배열 생성
     words = []
     for sentence in data:
-        sentence = preprocess_sentence(sentence)
+        #sentence = preprocess_sentence(sentence)
+        sentence = str(sentence)
         #print('정체크',sentence)
         # FILTERS = "([~.,!?\"':;)(])"
         # 위 필터와 같은 값들을 정규화 표현식을
@@ -364,17 +390,31 @@ def load_vocabulary():
     # 사전을 구성한 후 파일로 저장 진행한다.
     # 그 파일의 존재 유무를 확인한다.
     if (not (os.path.exists(DEFINES.vocabulary_path))):
-        # 이미 생성된 사전 파일이 존재하지 않으므로
-        # 데이터를 가지고 만들어야 한다.
-        # 그래서 데이터가 존재 하면 사전을 만들기 위해서
-        # 데이터 파일의 존재 유무를 확인한다.
         if (os.path.exists(DEFINES.data_path)):
             # 데이터가 존재하니 판단스를 통해서
             # 데이터를 불러오자
             data_df = pd.read_csv(DEFINES.data_path, encoding='utf-8')
             # 판다스의 데이터 프레임을 통해서
             # 질문과 답에 대한 열을 가져 온다.
-            question, answer = list(data_df['Text']), list(data_df['Summary'])
+            # ------------------------------------------------------ 전처리
+            data = data_df[['text', 'headlines']]
+            data.drop_duplicates(subset=['text'], inplace=True)
+
+            # 질문과 답변 열을 가져와 question과 answer에 넣는다.
+            question, answer = data['text'], data['headlines']
+
+            clean_text = []
+            clean_summary = []
+            for q, a in zip(question, answer):
+                clean_text.append(preprocess_sentence(q))
+                clean_summary.append(preprocess_sentence(a))
+            data['text'] = clean_text
+            data['headlines'] = clean_summary
+            data.replace('', np.nan, inplace=True)
+            data.dropna(axis=0, inplace=True)
+            # -------------------------------------------------------------
+            question, answer = data['text'], data['headlines']
+
             if DEFINES.tokenize_as_WordPunctTokenizer:  # 형태소에 따른 토크나이져 처리
                 question = prepro_like_morphlized(question)
                 answer = prepro_like_morphlized(answer)
