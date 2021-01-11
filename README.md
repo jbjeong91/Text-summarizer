@@ -1,7 +1,7 @@
 # Text-summarizer
 
 ## Notes
-- 트랜스포머와 Point Generative Network를 기반으로하는 문장 요약 모델
+- 트랜스포머와 Pointer Network를 기반으로하는 문장 요약 모델
   
   The code is for Text summery based on Transformer and Point Generative Network
 - 이 코드는 아래의 Transforemr 코드를 수정하여 제작되었음
