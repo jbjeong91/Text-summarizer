@@ -13,11 +13,11 @@
 - Tensorflow==1.12
 
 ## Data
-- 아마존 음식 리뷰 데이터 활용
+- 뉴스 데이터 활용
   
-  The Amazon review data is utilized
+  News data is utilized
   
-  Link: https://www.kaggle.com/snap/amazon-fine-food-reviews
+  Link: https://www.kaggle.com/sunnysai12345/news-summary
 
 ## How to use
 - 데이터를 Data 링크에서 다운로드하여 Data in 폴더에 csv 파일 넣기
