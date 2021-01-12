@@ -235,9 +235,10 @@ def Model(features, labels, mode, params):
     # logits과 같은 차원을 만들기 위함이다.
 
     #수정된 loss---------
-    # labels_ = tf.one_hot(labels, params['vocabulary_length'])
-    # loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_))
-    loss = _PGN_loss(final_dists=final_dists, targets=labels)
+    labels_ = tf.one_hot(labels, params['vocabulary_length'])
+    loss1 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=logits, labels=labels_))
+    loss2 = _PGN_loss(final_dists=final_dists, targets=labels)
+    loss = loss1 + loss2
     #-------------------
     accuracy = tf.metrics.accuracy(labels=labels, predictions=predict)
 
