@@ -74,7 +74,7 @@ def main(self):
         # 존재하지 않는다.(구조를 맞추기 위해 넣는다.)
         predic_target_dec = data.dec_target_processing([""], char2idx)
 
-        '''
+
         for i in range(DEFINES.max_sequence_length):
             if i > 0:
                 predic_output_dec, predic_output_decLength = data.dec_output_processing([answer], char2idx)
@@ -86,13 +86,7 @@ def main(self):
             answer, finished = data.pred_next_string(predictions, idx2char)
             if finished:
                 break
-        '''
-        predictions = classifier.predict(
-            input_fn=lambda: data.eval_input_fn(predic_input_enc, predic_output_dec, predic_target_dec, 1))
 
-        answer, finished = data.pred_next_string(predictions, idx2char)
-        # 예측한 값을 인지 할 수 있도록
-        # 텍스트로 변경하는 부분이다.
         print("answer: ", answer)
 
 
