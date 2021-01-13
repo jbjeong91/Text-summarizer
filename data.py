@@ -1,7 +1,7 @@
 #from konlpy.tag import Twitter
-from nltk.tokenize import WordPunctTokenizer
 import pandas as pd
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import enum
 import os
 import re
@@ -11,8 +11,10 @@ from configs import DEFINES
 
 from tqdm import tqdm
 #--------------
+from nltk.tokenize import WordPunctTokenizer
+from tensorflow.keras.preprocessing.text import Tokenizer
 from bs4 import BeautifulSoup
-from transformers import BertTokenizer
+#from transformers import BertTokenizer
 #----------------
 FILTERS = "([~.,\"':;)(]<>)'...'"
 PAD = "<PAD>"
@@ -39,7 +41,7 @@ def preprocess_sentence(sentence):
     sentence = re.sub('"','', sentence) # 쌍따옴표 " 제거
     sentence = ' '.join([contractions[t] if t in contractions else t for t in sentence.split(" ")]) # 약어 정규화
     sentence = re.sub(r"'s\b","",sentence) # 소유격 제거. Ex) roland's -> roland
-    sentence = re.sub("[^a-zA-Z]", " ", sentence) # 영어 외 문자(숫자, 특수문자 등) 공백으로 변환
+    #sentence = re.sub("[^a-zA-Z]", " ", sentence) # 영어 외 문자(숫자, 특수문자 등) 공백으로 변환
     sentence = re.sub('[m]{2,}', 'mm', sentence) # m이 3개 이상이면 2개로 변경. Ex) ummmmmmm yeah -> umm yeah
     
     #추가
@@ -52,25 +54,27 @@ def preprocess_sentence(sentence):
 def load_data():
     # 판다스를 통해서 데이터를 불러온다.
     data_df = pd.read_csv(DEFINES.data_path, header=0)
-    #------------------------------------------------------ 전처리
-    data = data_df[['text','headlines']]
-    data.drop_duplicates(subset=['text'], inplace=True)
+    # ------------------------------------------------------ 전처리
+    data = data_df[['Text', 'Summary']]
+    data = data[data['Text'].apply(lambda x: len(str(x).split()) <= 50)]
+    data = data[data['Summary'].apply(lambda x: len(str(x).split()) <= 80)]
+    data.drop_duplicates(subset=['Text'], inplace=True)
 
     # 질문과 답변 열을 가져와 question과 answer에 넣는다.
-    question, answer = data['text'], data['headlines']
+    question, answer = data['Text'], data['Summary']
 
     clean_text = []
     clean_summary = []
     for q, a in zip(question, answer):
         clean_text.append(preprocess_sentence(q))
         clean_summary.append(preprocess_sentence(a))
-    data['text'] = clean_text
-    data['headlines'] = clean_summary
-    data.replace('',np.nan, inplace=True)
+    data['Text'] = clean_text
+    data['Summary'] = clean_summary
+    data.replace('', np.nan, inplace=True)
     data.dropna(axis=0, inplace=True)
     # -------------------------------------------------------------
-    question, answer = data['text'], data['headlines']
-    #-------------------------------------------------------------
+    question, answer = data['Text'], data['Summary']
+    # -------------------------------------------------------------
     # skleran에서 지원하는 함수를 통해서 학습 셋과
     # 테스트 셋을 나눈다.
     train_input, eval_input, train_label, eval_label = train_test_split(question, answer, test_size=0.33, random_state=42)
@@ -89,8 +93,8 @@ def prepro_seq(seq):
 def prepro_like_morphlized(data):
     # 형태소 분석 모듈 객체를
     # 생성합니다.
-    #WP_analyzer = WordPunctTokenizer()
-    bert_analyzer = BertTokenizer.from_pretrained('bert-base-uncased')
+    WP_analyzer = WordPunctTokenizer()
+    #bert_analyzer = BertTokenizer.from_pretrained('bert-base-uncased')
 
     # 형태소 토크나이즈 결과 문장을 받을
     #  리스트를 생성합니다.
@@ -103,7 +107,7 @@ def prepro_like_morphlized(data):
         # 하여 문자열로 재구성 해줍니다.
         seq = str(seq)
         #seq = preprocess_sentence(seq)
-        morphlized_seq = " ".join(bert_analyzer.tokenize(seq))
+        morphlized_seq = " ".join(WP_analyzer.tokenize(seq))
         result_data.append(morphlized_seq)
 
     return result_data
@@ -397,23 +401,27 @@ def load_vocabulary():
             # 판다스의 데이터 프레임을 통해서
             # 질문과 답에 대한 열을 가져 온다.
             # ------------------------------------------------------ 전처리
-            data = data_df[['text', 'headlines']]
-            data.drop_duplicates(subset=['text'], inplace=True)
+            data = data_df[['Text', 'Summary']]
+            #print('정체크data',data)
+            data = data[data['Text'].apply(lambda x: len(str(x).split()) <= 50)]
+            data = data[data['Summary'].apply(lambda x: len(str(x).split()) <= 80)]
+            data.drop_duplicates(subset=['Text'], inplace=True)
 
             # 질문과 답변 열을 가져와 question과 answer에 넣는다.
-            question, answer = data['text'], data['headlines']
+            question, answer = data['Text'], data['Summary']
 
             clean_text = []
             clean_summary = []
             for q, a in zip(question, answer):
                 clean_text.append(preprocess_sentence(q))
                 clean_summary.append(preprocess_sentence(a))
-            data['text'] = clean_text
-            data['headlines'] = clean_summary
+            data['Text'] = clean_text
+            data['Summary'] = clean_summary
             data.replace('', np.nan, inplace=True)
             data.dropna(axis=0, inplace=True)
             # -------------------------------------------------------------
-            question, answer = data['text'], data['headlines']
+            question, answer = data['Text'], data['Summary']
+            # -------------------------------------------------------------
 
             if DEFINES.tokenize_as_WordPunctTokenizer:  # 형태소에 따른 토크나이져 처리
                 question = prepro_like_morphlized(question)
@@ -469,6 +477,7 @@ def make_vocabulary(vocabulary_list):
     return char2idx, idx2char
 
 
+'''
 def main(self):
     char2idx, idx2char, vocabulary_length = load_vocabulary()
 
@@ -476,3 +485,4 @@ def main(self):
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run(main)
+'''
