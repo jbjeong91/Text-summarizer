@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-import tensorflow as tf
+#import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import sys
+
 from configs import DEFINES
 import numpy as np
-tf.enable_eager_execution
+
 
 def layer_norm(inputs, eps=1e-6):
     # LayerNorm(x + Sublayer(x))
