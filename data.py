@@ -1,7 +1,7 @@
 #from konlpy.tag import Twitter
 import pandas as pd
-#import tensorflow as tf
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
+
 import enum
 import os
 import re
@@ -290,7 +290,7 @@ def pred_next_string(value, dictionary):
     # 인덱스 배열 하나를 꺼내서 v에 넘겨준다.
     for v in value:
         # 딕셔너리에 있는 단어로 변경해서 배열에 담는다.
-        print(v['indexs'])
+        #print(v['indexs'])
         sentence_string = [dictionary[index] for index in v['indexs']]
 
     answer = ""
