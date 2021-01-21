@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--train', action='store_true', default=False, help='for training')
 parser.add_argument('--test', action='store_true', default=False, help='for testing')
-parser.add_argument('--step', type=float, default=10000, help='for training')
+parser.add_argument('--step', type=float, default=100000, help='for training')
 args = parser.parse_args()
 
 def main(self):
