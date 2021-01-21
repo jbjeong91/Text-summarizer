@@ -1,4 +1,6 @@
 import tensorflow as tf
+physical_devices = tf.config.list_physical_devices('GPU')
+tf.config.experimental.set_memory_growth(physical_devices[0], True)
 import model as ml
 import data
 import numpy as np
@@ -8,7 +10,6 @@ import sys
 from configs import DEFINES
 
 DATA_OUT_PATH = './data_out/'
-
 
 def main(self):
     data_out_path = os.path.join(os.getcwd(), DATA_OUT_PATH)
@@ -25,7 +26,12 @@ def main(self):
     # exist_ok가 False이면 이미 존재하면 
     # OSError가 발생한다.
     os.makedirs(check_point_path, exist_ok=True)
-
+    # ----------------------------------
+    tf.keras.backend.clear_session()
+    os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    # ---------------------------------
     # 에스티메이터 구성한다.
     classifier = tf.estimator.Estimator(
         model_fn=ml.Model,  # 모델 등록한다.
@@ -48,6 +54,7 @@ def main(self):
         train_input, train_label, eval_input, eval_label = data.load_data()
 
         # 훈련셋 인코딩 만드는 부분이다.
+        print('정범',train_input)
         train_input_enc, train_input_enc_length = data.enc_processing(train_input, char2idx)
         # 훈련셋 디코딩 입력 부분 만드는 부분이다.
         train_output_dec, train_output_dec_length = data.dec_output_processing(train_label, char2idx)
@@ -66,7 +73,8 @@ def main(self):
     
     # test 부분
     if DEFINES.cmd == 'test':
-        predic_input_enc, predic_input_enc_length = data.enc_processing(["I am very satisfied with my Twizzler purchase.  I shared these with others and we have all enjoyed them.  I will definitely be ordering more."], char2idx)
+        q_sent = input('Review sentence> ').strip()
+        predic_input_enc, predic_input_enc_length = data.enc_processing([q_sent], char2idx)
         # 학습 과정이 아니므로 디코딩 입력은
         # 존재하지 않는다.(구조를 맞추기 위해 넣는다.)
         predic_output_dec, predic_output_decLength = data.dec_output_processing([""], char2idx)
@@ -74,7 +82,7 @@ def main(self):
         # 존재하지 않는다.(구조를 맞추기 위해 넣는다.)
         predic_target_dec = data.dec_target_processing([""], char2idx)
 
-
+        
         for i in range(DEFINES.max_sequence_length):
             if i > 0:
                 predic_output_dec, predic_output_decLength = data.dec_output_processing([answer], char2idx)
@@ -86,8 +94,16 @@ def main(self):
             answer, finished = data.pred_next_string(predictions, idx2char)
             if finished:
                 break
+        print("summary: ", answer)
+        '''
+        predictions = classifier.predict(
+            input_fn=lambda: data.eval_input_fn(predic_input_enc, predic_output_dec, predic_target_dec, 1))
 
+        answer, finished = data.pred_next_string(predictions, idx2char)
+        # 예측한 값을 인지 할 수 있도록
+        # 텍스트로 변경하는 부분이다.
         print("answer: ", answer)
+        '''
 
 
 if __name__ == '__main__':
