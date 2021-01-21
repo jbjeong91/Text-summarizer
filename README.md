@@ -27,7 +27,7 @@
 - Train
 
 ~~~
-python main.py --train
+python main.py --train --train_steps=30000 --batch_size=32
 ~~~
 
 - Test
