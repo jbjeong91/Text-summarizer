@@ -27,7 +27,7 @@
 - Train
 
 ~~~
-python --train --step 100000
+python --train
 ~~~
 
 - Test
