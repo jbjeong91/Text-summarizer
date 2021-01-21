@@ -1,7 +1,6 @@
 #from konlpy.tag import Twitter
 import pandas as pd
 import tensorflow as tf
-
 import enum
 import os
 import re
@@ -259,18 +258,18 @@ def dec_target_processing(value, dictionary):
 def pred2string(value, dictionary):
     # 텍스트 문장을 보관할 배열을 선언한다.
     sentence_string = []
-    print(value)
+    #print(value)
     # 인덱스 배열 하나를 꺼내서 v에 넘겨준다.
     for v in value:
         # 딕셔너리에 있는 단어로 변경해서 배열에 담는다.
-        print(v['indexs'])
+        #print(v['indexs'])
         for index in v['indexs']:
-            print(index)
+            #print(index)
         sentence_string = [dictionary[index] for index in v['indexs']]
 
-    print("***********************")
-    print(sentence_string)
-    print("***********************")
+    #print("***********************")
+    #print(sentence_string)
+    #print("***********************")
     answer = ""
     # 패딩값도 담겨 있으므로 패딩은 모두 스페이스 처리 한다.
     for word in sentence_string:
@@ -278,7 +277,7 @@ def pred2string(value, dictionary):
             answer += word
             answer += " "
     # 결과를 출력한다.
-    print(answer)
+    #print(answer)
     return answer
 
 
@@ -475,14 +474,3 @@ def make_vocabulary(vocabulary_list):
     idx2char = {idx: char for idx, char in enumerate(vocabulary_list)}
     # 두개의 딕셔너리를 넘겨 준다.
     return char2idx, idx2char
-
-
-'''
-def main(self):
-    char2idx, idx2char, vocabulary_length = load_vocabulary()
-
-
-if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
-    tf.app.run(main)
-'''
