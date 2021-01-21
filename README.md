@@ -24,4 +24,16 @@
   
   Down load the Data from the link and put in the 'Data in' folder.
   
+- Train
+
+~~~
+python --train --step 100000
+~~~
+
+- Test
+
+~~~
+python --test
+~~~
+
 ## Example
