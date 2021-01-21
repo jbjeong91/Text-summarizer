@@ -27,13 +27,13 @@
 - Train
 
 ~~~
-python --train
+python main.py --train
 ~~~
 
 - Test
 
 ~~~
-python --test
+python main.py --test
 ~~~
 
 ## Example
