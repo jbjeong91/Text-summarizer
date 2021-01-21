@@ -13,7 +13,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('--train', action='store_true', default=False, help='for training')
 parser.add_argument('--test', action='store_true', default=False, help='for testing')
-parser.add_argument('--step', type=float, default=100000, help='for training')
+parser.add_argument('--train_steps', type=int, default=100000, help='for training')
+parser.add_argument('--batch_size', type=int, default=4, help='for training')
 args = parser.parse_args()
 
 def main(self):
@@ -59,7 +60,6 @@ def main(self):
         train_input, train_label, eval_input, eval_label = data.load_data()
 
         # 훈련셋 인코딩 만드는 부분이다.
-        print('정범',train_input)
         train_input_enc, train_input_enc_length = data.enc_processing(train_input, char2idx)
         # 훈련셋 디코딩 입력 부분 만드는 부분이다.
         train_output_dec, train_output_dec_length = data.dec_output_processing(train_label, char2idx)
@@ -74,11 +74,11 @@ def main(self):
         eval_target_dec = data.dec_target_processing(eval_label, char2idx)
         # 학습 실행
         classifier.train(input_fn=lambda: data.train_input_fn(
-            train_input_enc, train_output_dec, train_target_dec, DEFINES.batch_size), steps=args.step)
+            train_input_enc, train_output_dec, train_target_dec, args.batch_size), steps=args.train_steps)
     
     # test 부분
     if args.test:
-        q_sent = input('Review sentence> ').strip()
+        q_sent = input('Review sentence > ').strip()
         predic_input_enc, predic_input_enc_length = data.enc_processing([q_sent], char2idx)
         # 학습 과정이 아니므로 디코딩 입력은
         # 존재하지 않는다.(구조를 맞추기 위해 넣는다.)
@@ -112,7 +112,5 @@ def main(self):
 
 
 if __name__ == '__main__':
-    tf.logging.set_verbosity(tf.logging.INFO)
+    #tf.logging.set_verbosity(tf.logging.INFO)
     tf.app.run(main)
-
-tf.logging.set_verbosity
