@@ -6,10 +6,15 @@ import data
 import numpy as np
 import os
 import sys
-
 from configs import DEFINES
-
 DATA_OUT_PATH = './data_out/'
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--train', action='store_true', default=False, help='for training')
+parser.add_argument('--test', action='store_true', default=False, help='for testing')
+parser.add_argument('--step', type=float, default=10000, help='for training')
+args = parser.parse_args()
 
 def main(self):
     data_out_path = os.path.join(os.getcwd(), DATA_OUT_PATH)
@@ -49,7 +54,7 @@ def main(self):
             'xavier_initializer': DEFINES.xavier_initializer
         })
 
-    if DEFINES.cmd == 'train':
+    if args.train:
         # 훈련 데이터와 테스트 데이터를 가져온다.
         train_input, train_label, eval_input, eval_label = data.load_data()
 
@@ -69,10 +74,10 @@ def main(self):
         eval_target_dec = data.dec_target_processing(eval_label, char2idx)
         # 학습 실행
         classifier.train(input_fn=lambda: data.train_input_fn(
-            train_input_enc, train_output_dec, train_target_dec, DEFINES.batch_size), steps=DEFINES.train_steps)
+            train_input_enc, train_output_dec, train_target_dec, DEFINES.batch_size), steps=args.step)
     
     # test 부분
-    if DEFINES.cmd == 'test':
+    if args.test:
         q_sent = input('Review sentence> ').strip()
         predic_input_enc, predic_input_enc_length = data.enc_processing([q_sent], char2idx)
         # 학습 과정이 아니므로 디코딩 입력은
