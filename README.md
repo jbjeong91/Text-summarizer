@@ -26,14 +26,14 @@
   
 - Train
 
-~~~
-python main.py --train --train_steps=30000 --batch_size=32
-~~~
+  ~~~
+  python main.py --train --train_steps=30000 --batch_size=32
+  ~~~
 
 - Test
 
-~~~
-python main.py --test
-~~~
+  ~~~
+  python main.py --test
+  ~~~
 
 ## Example
